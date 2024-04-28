@@ -59,7 +59,7 @@ jobs:
             --export-options-plist=/Users/runner/export_options.plist
 
       - name: List IPA file
-        run: ls -l /Users/runner/work/flutter-android-and-ios-yaml-demo-project/build/ios/iphoneos/
+        run: ls -l /Users/runner/work/flutter-android-and-ios-yaml-demo-project/flutter-android-and-ios-yaml-demo-project/build/ios/
           
       - name: Upload to Pgyer
         run: curl -F "file=@${{ github.workspace }}/build/ios/iphoneos/Runner.ipa" -F "_api_key=${{ secrets.PGYER_API_KEY }}" https://www.pgyer.com/apiv2/app/upload
