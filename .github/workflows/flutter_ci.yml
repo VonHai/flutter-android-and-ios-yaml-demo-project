@@ -71,7 +71,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: ${{ env.PACKAGE_NAME }}
-          path: /build/ios/ipa/
+          path: ${{ github.workspace }}/build/ios/ipa/
     
   build_android:
     runs-on: ubuntu-latest
