@@ -36,8 +36,11 @@ jobs:
           security unlock-keychain -p "" build.keychain
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp ${HOME}/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-          ls ~/Library/MobileDevice/Provisioning\ Profiles/
 
+          echo "Copying provisioning profile:"
+          cp ${HOME}/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/ && echo "Copy successful"
+          echo "Listing contents:"
+          ls ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Set up code signing settings on Xcode project
         run: xcode-project use-profiles
