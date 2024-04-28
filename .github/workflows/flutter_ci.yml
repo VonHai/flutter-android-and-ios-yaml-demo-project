@@ -62,7 +62,7 @@ jobs:
         run: ls -lR /Users/runner/work/flutter-android-and-ios-yaml-demo-project/flutter-android-and-ios-yaml-demo-project/build/ios/
  
       - name: Upload to Pgyer
-        run: curl -F "file=@${{ github.workspace }}/build/ios/iphoneos/Runner.ipa" -F "_api_key=${{ secrets.PGYER_API_KEY }}" https://www.pgyer.com/apiv2/app/upload
+        run: curl -F "file=@${{ github.workspace }}/build/ios/ipa/Runner.ipa" -F "_api_key=${{ secrets.PGYER_API_KEY }}" https://www.pgyer.com/apiv2/app/upload
     
       - name: Publish iOS Artefacts
         uses: actions/upload-artifact@v1
