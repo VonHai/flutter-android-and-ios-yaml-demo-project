@@ -92,14 +92,11 @@ jobs:
       - name: Create the Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          KEY_PROPERTIES: ${{ secrets.KEY_PROPERTIES }}
         run: |
           # import keystore from secrets
           ls -all
           echo $KEYSTORE_BASE64 | base64 -di > android/app/key.jks
-          echo $KEY_PROPERTIES | base64 -di > android/key.properties
 
-          
       - name: Restore packages
         run: flutter pub get
 
