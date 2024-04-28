@@ -1,0 +1,58 @@
+name: AutoSign
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-sign-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v1
+        with:
+          flutter-version: '3.19.2' # 替换为你使用的Flutter版本
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Decode and install certificate and profile
+        run: |
+          echo ${{ secrets.IOS_CERTIFICATE }} | base64 --decode > ${HOME}/certificate.p12
+          echo ${{ secrets.IOS_PROVISIONING_PROFILE }} | base64 --decode > ${HOME}/profile.mobileprovision
+          security create-keychain -p "" build.keychain
+          security import ${HOME}/certificate.p12 -k build.keychain -P ${{ secrets.CERT_PASSWORD }} -T /usr/bin/codesign
+          security set-keychain-settings -t 3600 -u build.keychain
+          security unlock-keychain -p "" build.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp ${HOME}/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build iOS
+        run: flutter build ios --release --no-codesign
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: iOS App
+          path: build/ios/ipa/*.ipa
+
+      - name: Send notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: iOS Build Finished
+          body: The build was successful and the IPA is attached.
+          to: your-email@example.com
+          from: CI System
+          attachments: build/ios/ipa/*.ipa
