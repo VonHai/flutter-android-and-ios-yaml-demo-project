@@ -1,4 +1,4 @@
-name: Flutter CI
+name: AutoSign
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
           name: ipa-file
           path: build/ios/ipa/*.ipa
 
-          
+
   android-job:
     name: Android Workflow
     runs-on: macos-latest
