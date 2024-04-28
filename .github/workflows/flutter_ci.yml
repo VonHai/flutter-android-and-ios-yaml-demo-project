@@ -1,52 +1,57 @@
-name: Flutter CI
+name: Flutter_CI
 
 on:
   push:
-    branches: [main]
+    branches: [main] # 触发条件：当主分支有代码推送时
   pull_request:
-    branches: [main]
+    branches: [main] # 触发条件：当主分支有pull request时
 
 jobs:
-  ios_build:
-    name: Build iOS
+  build-and-sign-ios:
     runs-on: macos-latest
-    env:
-      XCODE_WORKSPACE: "ios/Runner.xcworkspace"
-      XCODE_SCHEME: Runner
-      BUILD_CONFIGURATION: Release
-      TEAM_ID: 4G27BQU73C
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v1
+        with:
+          flutter-version: '3.19.2' # 替换为你使用的Flutter版本
 
       - name: Install python and codemagic tools
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
-
+  
       - name: Install python dependencies
         run: python -m pip install codemagic-cli-tools
 
-      - name: Decode and install certificate and profile
+      - name: Install Apple Certificate
+        uses: apple-actions/import-codesign-certs@v1
+        with:
+            p12-file-base64: ${{ secrets.IOS_CERTIFICATE }}
+            p12-password: ${{ secrets.CERT_PASSWORD }}
+
+      - name: Install the provisioning profile
+        env:
+            PROVISIONING_CERTIFICATE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE }}
         run: |
-          echo ${{ secrets.IOS_CERTIFICATE }} | base64 --decode > ${HOME}/certificate.p12
-          echo ${{ secrets.IOS_PROVISIONING_PROFILE }} | base64 --decode > ${HOME}/profile.mobileprovision
-          security create-keychain -p "" build.keychain
-          security import ${HOME}/certificate.p12 -k build.keychain -P ${{ secrets.CERT_PASSWORD }} -T /usr/bin/codesign
-          security set-keychain-settings -t 3600 -u build.keychain
-          security unlock-keychain -p "" build.keychain
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp ${HOME}/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+            PP_PATH=$HOME/profile.mobileprovision
+            echo -n "$PROVISIONING_CERTIFICATE_BASE64" | base64 --decode --output $PP_PATH
+            mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+            cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+        
+      - name: Check Certificates in Keychain
+        run: security list-keychains
 
       - name: Set up code signing settings on Xcode project
         run: xcode-project use-profiles
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v1
-        with:
-          flutter-version: '3.19.2'
-
-      - name: Install Flutter dependencies
+      - name: Install dependencies
         run: flutter pub get
+        
+      - name: Run tests
+        run: flutter test
 
       - name: Build and version iOS app
         run: |
@@ -55,7 +60,7 @@ jobs:
 
       - name: Upload to Pgyer
         run: curl -F "file=@${{ github.workspace }}/build/ios/iphoneos/Runner.ipa" -F "_api_key=${{ secrets.PGYER_API_KEY }}" https://www.pgyer.com/apiv2/app/upload
-
+    
   android_build:
     name: Build Android APK
     runs-on: ubuntu-latest
