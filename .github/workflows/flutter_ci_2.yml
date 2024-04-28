@@ -34,12 +34,10 @@ jobs:
 
       - name: Install the provisioning profile
         env:
-            PROVISIONING_CERTIFICATE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+            PROVISIONING_CERTIFICATE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE }}
         run: |
             PP_PATH=$HOME/profile.mobileprovision
-        
             echo -n "$PROVISIONING_CERTIFICATE_BASE64" | base64 --decode --output $PP_PATH
-        
             mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
             cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
         
