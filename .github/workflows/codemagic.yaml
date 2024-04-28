@@ -1,0 +1,93 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+
+  ios-job:
+    name: iOS Workflow
+    runs-on: macos-latest
+    env:
+      APP_ID: 1111111111
+      FLUTTER_ROOT: /Users/runner/hostedtoolcache/flutter/3.19.2-stable/arm64
+      PUB_CACHE: /Users/runner/hostedtoolcache/flutter/3.19.2-stable/arm64/.pub-cache
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up code signing settings on Xcode project
+        run: xcode-project use-profiles
+      - name: Get Flutter packages
+        run: flutter packages pub get
+      - name: Install pods
+        run: find . -name "Podfile" -execdir pod install \;
+      - name: Flutter analyze
+        run: flutter analyze
+      - name: Flutter unit tests
+        run: flutter test
+        continue-on-error: true
+      - name: Flutter build ipa and automatic versioning
+        run: |
+          flutter build ipa --release \
+            --build-name=1.0.0 \
+            --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_ID") + 1)) \
+            --export-options-plist=/Users/builder/export_options.plist
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ipa-file
+          path: build/ios/ipa/*.ipa
+
+          
+  android-job:
+    name: Android Workflow
+    runs-on: macos-latest
+    env:
+      PACKAGE_NAME: "io.codemagic.flutteryaml"
+      GOOGLE_PLAY_TRACK: "alpha"
+      GCLOUD_SERVICE_ACCOUNT_CREDENTIALS: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up local.properties
+        run: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$GITHUB_WORKSPACE/android/local.properties"
+      - name: Get Flutter packages
+        run: flutter packages pub get
+      - name: Flutter analyze
+        run: flutter analyze
+      - name: Flutter unit tests
+        run: flutter test
+        continue-on-error: true
+      - name: Build AAB with Flutter
+        run: |
+          BUILD_NUMBER=$(($(google-play get-latest-build-number --package-name "$PACKAGE_NAME" --tracks="$GOOGLE_PLAY_TRACK") + 1))      
+          flutter build appbundle --release \
+            --build-name=1.0.$BUILD_NUMBER \
+            --build-number=$BUILD_NUMBER
+      - uses: actions/upload-artifact@v2
+        with:
+          name: app-bundle
+          path: build/**/outputs/**/*.aab
+
+
+  web-job:
+    name: Web app workflow
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get Flutter packages
+        run: flutter packages pub get
+      - name: Flutter analyze
+        run: flutter analyze
+      - name: Flutter unit tests
+        run: flutter test
+      - name: Flutter build webapp
+        run: |
+          flutter build web --release
+          cd build/web
+          7z a -r ../web.zip ./*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: web-build
+          path: build/web.zip
