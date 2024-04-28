@@ -1,4 +1,4 @@
-name: AutoSign
+name: Flutter_CI_2
 
 on:
   push:
@@ -35,8 +35,10 @@ jobs:
       - name: Run tests
         run: flutter test
 
-      - name: Build iOS
-        run: flutter build ios --release --no-codesign
+      - name: Build and version iOS app
+        run: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/runner/export_options.plist
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
