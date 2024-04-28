@@ -9,6 +9,9 @@ on:
 jobs:
   build-and-sign-ios:
     runs-on: macos-latest
+    env:
+      PACKAGE_NAME: flutteryaml.ipa  # 定义包名作为一个环境变量
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -62,8 +65,8 @@ jobs:
         run: ls -lR /Users/runner/work/flutter-android-and-ios-yaml-demo-project/flutter-android-and-ios-yaml-demo-project/build/ios/
  
       - name: Upload to Pgyer
-        run: curl -F "file=@${{ github.workspace }}/build/ios/ipa/Runner.ipa" -F "_api_key=${{ secrets.PGYER_API_KEY }}" https://www.pgyer.com/apiv2/app/upload
-    
+        run: curl -F "file=@${{ github.workspace }}/build/ios/ipa/${{ env.PACKAGE_NAME }}" -F "_api_key=${{ secrets.PGYER_API_KEY }}" https://www.pgyer.com/apiv2/app/upload
+     
       - name: Publish iOS Artefacts
         uses: actions/upload-artifact@v1
         with:
