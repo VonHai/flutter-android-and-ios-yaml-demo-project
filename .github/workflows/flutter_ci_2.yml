@@ -18,8 +18,7 @@ jobs:
         with:
           flutter-version: '3.19.2' # 替换为你使用的Flutter版本
 
-      - name: Install dependencies
-        run: flutter pub get
+
 
       - name: Decode and install certificate and profile
         run: |
@@ -32,6 +31,12 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp ${HOME}/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
+      - name: Set up code signing settings on Xcode project
+        run: xcode-project use-profiles
+
+      - name: Install dependencies
+        run: flutter pub get
+        
       - name: Run tests
         run: flutter test
 
