@@ -31,7 +31,7 @@ jobs:
         run: |
           echo ${{ secrets.IOS_CERTIFICATE }} | base64 --decode > $HOME/certificate.p12
           echo ${{ secrets.IOS_PROVISIONING_PROFILE }} | base64 --decode > $HOME/profile.mobileprovision
-          keychain add-certificates --certificate $HOME/certificate.p12 --certificate-password "${CERT_PASSWORD}" --provisioning-profile $HOME/profile.mobileprovision
+          keychain add-certificates --certificate $HOME/certificate.p12 --certificate-password "${CERT_PASSWORD}"
 
           security find-identity -p codesigning -v
 
